@@ -1,13 +1,15 @@
 #!/usr/bin/env groovy
 
 def config = [
-    scriptVersion            : 'v7',
-    pipelineScript           : 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
-    goVersion                : 'Go 1.13',
-    credentialsId            : "github",
-    versionStrategy          : [
-        [branch: 'master', versionHint: '0.1']
-    ]
+        artifactId     : 'aurora-management-interface-go',
+        groupId        : 'no.skatteetaten.aurora',
+        scriptVersion  : 'v7',
+        pipelineScript : 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
+        goVersion      : 'Go 1.13',
+        credentialsId  : "github",
+        versionStrategy: [
+                [branch: 'master', versionHint: '0.1']
+        ]
 ]
 
 run(config.scriptVersion, config)
@@ -59,7 +61,7 @@ def run(String scriptVersion, Map<String, Object> overrides = [:]) {
                 }
             }
 
-            if(props.sonarQube) {
+            if (props.sonarQube) {
                 stage('Sonar') {
                     def sonarPath = tool 'Sonar 4'
                     sh "${sonarPath}/bin/sonar-scanner -Dsonar.branch.name=${env.BRANCH_NAME}"
