@@ -7,14 +7,15 @@ def config = [
         pipelineScript : 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
         goVersion      : 'Go 1.13',
         credentialsId  : "github",
+        debug          : true,
         versionStrategy: [
                 [branch: 'master', versionHint: '0.1']
         ]
 ]
 
-run(config.scriptVersion, config)
+run(config)
 
-def run(String scriptVersion, Map<String, Object> overrides = [:]) {
+def run(Map<String, Object> overrides = [:]) {
 
     if (overrides.debug) {
         println("Custom go build overrides: $overrides")
