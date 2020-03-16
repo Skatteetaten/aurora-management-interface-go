@@ -7,10 +7,11 @@ def config = [
         pipelineScript : 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
         goVersion      : 'Go 1.13',
         credentialsId  : "github",
-        debug          : true,
+        iq             : false,
         versionStrategy: [
                 [branch: 'master', versionHint: '0.1']
-        ]
+        ],
+        debug          : true
 ]
 
 run(config.scriptVersion, config)
