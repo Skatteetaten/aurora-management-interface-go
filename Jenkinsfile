@@ -8,6 +8,7 @@ def config = [
         goVersion      : 'Go 1.13',
         credentialsId  : "github",
         iq             : false,
+        sonarQube      : false,
         versionStrategy: [
                 [branch: 'master', versionHint: '0.1']
         ],
