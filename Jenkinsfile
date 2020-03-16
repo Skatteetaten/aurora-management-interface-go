@@ -13,9 +13,9 @@ def config = [
         ]
 ]
 
-run(config)
+run(config.scriptVersion, config)
 
-def run(Map<String, Object> overrides = [:]) {
+def run(String scriptVersion, Map<String, Object> overrides = [:]) {
 
     if (overrides.debug) {
         println("Custom go build overrides: $overrides")
@@ -32,7 +32,7 @@ def run(Map<String, Object> overrides = [:]) {
         node {
 
             stage('Load shared libraries') {
-                fileLoader.withGit(overrides.pipelineScript, overrides.scriptVersion) {
+                fileLoader.withGit(overrides.pipelineScript, scriptVersion) {
                     utilities = fileLoader.load('utilities/utilities')
                     propertiesUtils = fileLoader.load('utilities/properties')
                     git = fileLoader.load('git/git')
