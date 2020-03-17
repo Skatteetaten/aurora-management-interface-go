@@ -11,6 +11,12 @@ import (
 
 var defaultKeysToSanitize = [...]string{"password", "secret", "key", "token", "credential", "vcap_services", "sun.java.command"}
 
+// ApplicationEnvRetriever is an interface for retrieving a structure of environment variables for management-interface use
+type ApplicationEnvRetriever interface {
+	GetApplicationEnv() *ApplicationEnv
+	SetKeysToMask(keysToMask []string)
+}
+
 // ApplicationEnv is a structure for standardized environment variables response from management interface at application level
 type ApplicationEnv struct {
 	ActiveProfiles  []string         `json:"activeProfiles"`
@@ -31,12 +37,11 @@ type PropertyValue struct {
 
 // ApplicationEnvHandler fetches an ApplicationEnv structure from the application and parses it for a proper http response
 type ApplicationEnvHandler struct {
-	Envfunc        func() *ApplicationEnv
-	PropertyMasker *PropertyMasker
+	ApplicationEnvRetriever ApplicationEnvRetriever
 }
 
 func (aeh *ApplicationEnvHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	envResponse := aeh.Envfunc()
+	envResponse := aeh.ApplicationEnvRetriever.GetApplicationEnv()
 
 	envResponseJSON, err := json.Marshal(envResponse)
 	if err != nil {
@@ -58,14 +63,40 @@ func (aeh *ApplicationEnvHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	_, _ = fmt.Fprintf(w, "%s", envResponseJSON)
 }
 
-// DefaultEnvFunc loads system environment variables and returns them as a standard ApplicationEnv structure
-func (aeh *ApplicationEnvHandler) DefaultEnvFunc() *ApplicationEnv {
+// SetKeysToMask specifies an array of environvent variable names that will be masked regardless of standard masking
+func (aeh *ApplicationEnvHandler) SetKeysToMask(keysToMask []string) {
+	aeh.ApplicationEnvRetriever.SetKeysToMask(keysToMask)
+}
+
+// DefaultApplicationEnvHandler provides a simple, standardized handler for the env management endpoint
+func DefaultApplicationEnvHandler() *ApplicationEnvHandler {
+	applicationEnvHandler := ApplicationEnvHandler{
+		ApplicationEnvRetriever: DefaultEnvRetriever{
+			PropertyMasker: &PropertyMasker{keysToMask: nil},
+		},
+	}
+
+	return &applicationEnvHandler
+}
+
+// GetDefaultEnvRetriever gets a DefaultEnvRetriever with default initialization
+func GetDefaultEnvRetriever() DefaultEnvRetriever {
+	return DefaultEnvRetriever{PropertyMasker: &PropertyMasker{}}
+}
+
+// DefaultEnvRetriever returns all system environment variables
+type DefaultEnvRetriever struct {
+	PropertyMasker *PropertyMasker
+}
+
+// GetApplicationEnv loads system environment variables and returns them as a standard ApplicationEnv structure
+func (der DefaultEnvRetriever) GetApplicationEnv() *ApplicationEnv {
 	properties := make(map[string]PropertyValue)
 	for _, pair := range os.Environ() {
 		variable := strings.Split(pair, "=")
 		key := variable[0]
 		value := variable[1]
-		properties[key] = aeh.PropertyMasker.GetPropertyValue(key, value)
+		properties[key] = der.PropertyMasker.GetPropertyValue(key, value)
 	}
 	propertySource := PropertySource{
 		Name:       "systemEnvironment",
@@ -80,21 +111,12 @@ func (aeh *ApplicationEnvHandler) DefaultEnvFunc() *ApplicationEnv {
 }
 
 // SetKeysToMask sets a set of property keys that will be masked with ***
-func (aeh *ApplicationEnvHandler) SetKeysToMask(keysToMask []string) {
-	if aeh.PropertyMasker == nil {
-		aeh.PropertyMasker = &PropertyMasker{keysToMask: keysToMask}
+func (der DefaultEnvRetriever) SetKeysToMask(keysToMask []string) {
+	if der.PropertyMasker == nil {
+		der.PropertyMasker = &PropertyMasker{keysToMask: keysToMask}
 	} else {
-		aeh.PropertyMasker.keysToMask = keysToMask
+		der.PropertyMasker.keysToMask = keysToMask
 	}
-}
-
-// DefaultApplicationEnvHandler provides a simple, standardized handler for the env management endpoint
-func DefaultApplicationEnvHandler() *ApplicationEnvHandler {
-	applicationEnvHandler := ApplicationEnvHandler{}
-	applicationEnvHandler.Envfunc = applicationEnvHandler.DefaultEnvFunc
-	applicationEnvHandler.PropertyMasker = &PropertyMasker{keysToMask: nil}
-
-	return &applicationEnvHandler
 }
 
 // PropertyMasker masks values for some keys to protect secrets

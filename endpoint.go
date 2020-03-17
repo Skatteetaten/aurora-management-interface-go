@@ -26,8 +26,6 @@ const (
 type endpoint struct {
 	endpointid  EndPointType
 	path        string
-	host        string
-	port        string
 	handlerfunc func(http.ResponseWriter, *http.Request)
 }
 
@@ -39,15 +37,13 @@ func (ept EndPointType) isValid() error {
 	return fmt.Errorf("Invalid endpointid type: %s", ept)
 }
 
-func newEndPoint(ept EndPointType, host string, port string, handler func(http.ResponseWriter, *http.Request)) (*endpoint, error) {
+func newEndPoint(ept EndPointType, handler func(http.ResponseWriter, *http.Request)) (*endpoint, error) {
 	if err := ept.isValid(); err != nil {
 		return nil, err
 	}
 
 	var ep = &endpoint{
 		endpointid:  ept,
-		host:        host,
-		port:        port,
 		handlerfunc: handler,
 	}
 	switch ept {
@@ -67,6 +63,6 @@ func (endpoint endpoint) setPath(path string) {
 	endpoint.path = path
 }
 
-func (endpoint endpoint) getEndpointURL() string {
-	return fmt.Sprintf("http://%s:%s%s", endpoint.host, endpoint.port, endpoint.path)
+func (endpoint endpoint) getEndpointURL(hostWithPort string) string {
+	return fmt.Sprintf("http://%s%s", hostWithPort, endpoint.path)
 }

@@ -7,16 +7,13 @@ import (
 	"testing"
 )
 
-type testStatusHandler struct {
-}
-
 func TestDefaultHealthHandlerFunc_ServeHTTP(t *testing.T) {
 	t.Run("Should work without error (happytest)", func(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", "http://localhost:8081/health", nil)
 		response := httptest.NewRecorder()
 
-		appHealthHandler := ApplicationHealthHandler{Statusfunc: DefaultHealthHandlerStatusFunc}
+		appHealthHandler := ApplicationHealthHandler{ApplicationHealthRetriever: DefaultHealthRetriever{}}
 		appHealthHandler.ServeHTTP(response, request)
 
 		assert.Equal(t, http.StatusOK, response.Code)
@@ -30,8 +27,8 @@ func TestDefaultHealthHandlerFunc_ServeHTTP(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		appHealthHandler := ApplicationHealthHandler{
-			Statusfunc: func() *ApplicationHealth {
-				return &ApplicationHealth{Status: Down}
+			ApplicationHealthRetriever: testApplicationHealthRetriever{
+				response: &ApplicationHealth{Status: Down},
 			},
 		}
 
@@ -48,8 +45,8 @@ func TestDefaultHealthHandlerFunc_ServeHTTP(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		appHealthHandler := ApplicationHealthHandler{
-			Statusfunc: func() *ApplicationHealth {
-				return &ApplicationHealth{}
+			ApplicationHealthRetriever: testApplicationHealthRetriever{
+				response: &ApplicationHealth{},
 			},
 		}
 
@@ -63,8 +60,8 @@ func TestDefaultHealthHandlerFunc_ServeHTTP(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		appHealthHandler := ApplicationHealthHandler{
-			Statusfunc: func() *ApplicationHealth {
-				return nil
+			ApplicationHealthRetriever: testApplicationHealthRetriever{
+				response: nil,
 			},
 		}
 
@@ -76,4 +73,12 @@ func TestDefaultHealthHandlerFunc_ServeHTTP(t *testing.T) {
 		assert.Contains(t, response.Body.String(), "error")
 	})
 
+}
+
+type testApplicationHealthRetriever struct {
+	response *ApplicationHealth
+}
+
+func (tahr testApplicationHealthRetriever) GetApplicationHealth() *ApplicationHealth {
+	return tahr.response
 }

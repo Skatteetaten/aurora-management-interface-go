@@ -27,7 +27,7 @@ var HTTPStatus = map[string]int{
 
 // ApplicationHealthRetriever is an interface for health check methods at application level
 type ApplicationHealthRetriever interface {
-	GetApplicationHealth() ApplicationHealth
+	GetApplicationHealth() *ApplicationHealth
 }
 
 // ApplicationHealth is a structure for standardized health check response from applications
@@ -45,11 +45,11 @@ type ComponentHealth struct {
 
 // ApplicationHealthHandler fetches an ApplicationHealth structure from the application and parse it for a proper http response
 type ApplicationHealthHandler struct {
-	Statusfunc func() *ApplicationHealth
+	ApplicationHealthRetriever ApplicationHealthRetriever
 }
 
 func (ahh *ApplicationHealthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	healthResponse := ahh.Statusfunc()
+	healthResponse := ahh.ApplicationHealthRetriever.GetApplicationHealth()
 	if healthResponse == nil {
 		errorResponse(w, "Error getting health response", fmt.Errorf("healthResponse was nil"))
 		return
@@ -79,10 +79,17 @@ func errorResponse(w http.ResponseWriter, message string, err error) {
 	_, _ = fmt.Fprintf(w, "%s", responseJSON)
 }
 
-var defaultHealthResponse = ApplicationHealth{Status: Up}
+// GetDefaultHealthRetriever gets a DefaultHealthRetriever with default initialization
+func GetDefaultHealthRetriever() DefaultHealthRetriever {
+	return DefaultHealthRetriever{}
+}
 
-// DefaultHealthHandlerStatusFunc is a shallow health check, simply replying status UP
-func DefaultHealthHandlerStatusFunc() *ApplicationHealth {
+// DefaultHealthRetriever is a very shallow default health check handler, simply replying status UP
+type DefaultHealthRetriever struct{}
+
+// GetApplicationHealth returns Status UP for the DefaultHealthRetriever
+func (dhh DefaultHealthRetriever) GetApplicationHealth() *ApplicationHealth {
+	var defaultHealthResponse = ApplicationHealth{Status: Up}
 	return &defaultHealthResponse
 }
 

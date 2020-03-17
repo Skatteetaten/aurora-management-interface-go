@@ -16,10 +16,11 @@ func TestApplicationEnvHandler_ServeHTTP(t *testing.T) {
 			ActiveProfiles:  nil,
 			PropertySources: nil,
 		}
-
 		appenvhandler := ApplicationEnvHandler{
-			Envfunc: func() *ApplicationEnv {
-				return &applicationEnv
+			ApplicationEnvRetriever: testApplicationEnvRetriever{
+				testFunc: func() *ApplicationEnv {
+					return &applicationEnv
+				},
 			},
 		}
 
@@ -36,25 +37,28 @@ func TestApplicationEnvHandler_ServeHTTP(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		propertyMasker := PropertyMasker{}
+
 		appenvhandler := ApplicationEnvHandler{
-			Envfunc: func() *ApplicationEnv {
-				key1 := "property1"
-				key2 := "propsecret"
-				value1 := "value1"
-				value2 := "value2_secret"
-				properties := make(map[string]PropertyValue)
-				properties[key1] = propertyMasker.GetPropertyValue(key1, value1)
-				properties[key2] = propertyMasker.GetPropertyValue(key2, value2)
-				propertysource1 := PropertySource{
-					Name:       "systemEnvironment",
-					Properties: properties,
-				}
-				propertySources := []PropertySource{propertysource1}
-				applicationEnv := ApplicationEnv{
-					ActiveProfiles:  []string{"openshift"},
-					PropertySources: propertySources,
-				}
-				return &applicationEnv
+			ApplicationEnvRetriever: testApplicationEnvRetriever{
+				testFunc: func() *ApplicationEnv {
+					key1 := "property1"
+					key2 := "propsecret"
+					value1 := "value1"
+					value2 := "value2_secret"
+					properties := make(map[string]PropertyValue)
+					properties[key1] = propertyMasker.GetPropertyValue(key1, value1)
+					properties[key2] = propertyMasker.GetPropertyValue(key2, value2)
+					propertysource1 := PropertySource{
+						Name:       "systemEnvironment",
+						Properties: properties,
+					}
+					propertySources := []PropertySource{propertysource1}
+					applicationEnv := ApplicationEnv{
+						ActiveProfiles:  []string{"openshift"},
+						PropertySources: propertySources,
+					}
+					return &applicationEnv
+				},
 			},
 		}
 
@@ -115,4 +119,15 @@ func TestDefaultApplicationEnvHandler_ServeHTTP(t *testing.T) {
 			os.Unsetenv(someKeyToMaskExplicitly)
 		}
 	})
+}
+
+type testApplicationEnvRetriever struct {
+	testFunc func() *ApplicationEnv
+}
+
+func (taer testApplicationEnvRetriever) GetApplicationEnv() *ApplicationEnv {
+	return taer.testFunc()
+}
+func (taer testApplicationEnvRetriever) SetKeysToMask(keysToMask []string) {
+	/* dummy implementation */
 }

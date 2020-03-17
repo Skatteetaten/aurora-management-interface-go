@@ -27,8 +27,8 @@ func (mispec *ManagementinterfaceSpec) mapEndpoint(endpoint endpoint) {
 	}
 }
 
-func (mispec *ManagementinterfaceSpec) createManagementJSON() ([]byte, error) {
-	managementLinks := getLinkMapStructureForEndpoints(mispec.endpoints)
+func (mispec *ManagementinterfaceSpec) createManagementJSON(host string) ([]byte, error) {
+	managementLinks := getLinkMapStructureForEndpoints(mispec.endpoints, host)
 	managementLinksJSON, err := json.Marshal(managementLinks)
 	if err != nil {
 		return nil, err
@@ -38,10 +38,10 @@ func (mispec *ManagementinterfaceSpec) createManagementJSON() ([]byte, error) {
 	return managementLinksJSON, nil
 }
 
-func getLinkMapStructureForEndpoints(endpoints map[EndPointType]endpoint) map[string]interface{} {
+func getLinkMapStructureForEndpoints(endpoints map[EndPointType]endpoint, host string) map[string]interface{} {
 	endpointMap := make(map[string]interface{})
 	for endpointid, endpoint := range endpoints {
-		hrefMap := map[string]string{"href": endpoint.getEndpointURL()}
+		hrefMap := map[string]string{"href": endpoint.getEndpointURL(host)}
 		endpointMap[string(endpointid)] = hrefMap
 	}
 

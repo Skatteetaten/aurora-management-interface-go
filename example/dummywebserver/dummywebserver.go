@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// initDummyWebServer initializes dummy web server for example
+// InitDummyWebServer initializes dummy web server for example
 func InitDummyWebServer() {
 	routeHandler := createRouter()
 	http.Handle("/", routeHandler)

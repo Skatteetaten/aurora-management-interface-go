@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/sirupsen/logrus"
+	"fmt"
 	management "github.com/skatteetaten/aurora-management-interface-go"
 	"github.com/skatteetaten/aurora-management-interface-go/env"
 	"github.com/skatteetaten/aurora-management-interface-go/example/dummywebserver"
@@ -25,19 +25,31 @@ func initWebServer() {
 
 // InitManagementHandler initializes the managementinterface with /health and /env endpoints
 func InitManagementHandler() *management.RoutingHandler {
-	managementHandler, err := management.CreateRoutingHandler()
-	if err != nil {
-		logrus.Fatalf("Error while creating management interface router: %s", err)
-	}
-	// Override health.ApplicationHealthHandler.Statusfunc with application specific health check
-	appHealthHandlerStatusFunc := health.ApplicationHealthHandler{Statusfunc: health.DefaultHealthHandlerStatusFunc}
+	managementHandler := management.CreateRoutingHandler()
+
+	// You probably want to write an application specific health retriever unless you always want it to return with Status: UP
+	applicationHealthRetriever := health.GetDefaultHealthRetriever()
 
 	// DefaultApplicationEnvHandler works for basic cases. Override for application specific environment
-	appEnvHandler := env.DefaultApplicationEnvHandler()
-	appEnvHandler.SetKeysToMask([]string{"SomeEnvKeyToMask"})
+	applicationEnvRetriever := env.GetDefaultEnvRetriever()
+	applicationEnvRetriever.SetKeysToMask([]string{"SomeEnvKeyToMask"})
 
-	managementHandler.RouteEndPointHandlerFunc(management.Health, appHealthHandlerStatusFunc.ServeHTTP)
-	managementHandler.RouteEndPointHandlerFunc(management.Env, appEnvHandler.ServeHTTP)
+	// The info endpoint has no default implementation so far. This is a simple stub example, returning an empty JSON.
+	applicationInfoHandler := emptyInfoHandler{}
+
+	managementHandler.RouteApplicationHealthRetriever(applicationHealthRetriever)
+	managementHandler.RouteApplicationEnvRetriever(applicationEnvRetriever)
+	managementHandler.RouteEndPointToHandlerFunc(management.Info, applicationInfoHandler.ServeHTTP)
 
 	return managementHandler
+}
+
+type emptyInfoHandler struct{}
+
+func (eih emptyInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	returnJSON := "{}"
+
+	w.Header().Set("Content-Type", "application/vnd.spring-boot.actuator.v3+json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = fmt.Fprintf(w, "%s", returnJSON)
 }
