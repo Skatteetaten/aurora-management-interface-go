@@ -1,3 +1,7 @@
+# 0.1.4
+
+Improved documentation 
+
 # 0.1.1 
 
 Initial public version.  Still in QA and development.
