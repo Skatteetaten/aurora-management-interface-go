@@ -8,9 +8,9 @@ import (
 )
 
 func TestNewManagementinterfaceSpec(t *testing.T) {
-	t.Run("Should create ManagementinterfaceSpec", func(t *testing.T) {
+	t.Run("Should create managementinterfaceSpec", func(t *testing.T) {
 
-		managementinterfaceSpec := NewManagementinterfaceSpec()
+		managementinterfaceSpec := newManagementinterfaceSpec()
 
 		assert.NotNil(t, managementinterfaceSpec)
 		assert.NotNil(t, managementinterfaceSpec.endpoints)
@@ -20,7 +20,7 @@ func TestNewManagementinterfaceSpec(t *testing.T) {
 
 func TestMapEndpoint(t *testing.T) {
 	t.Run("Should create map endpoints properly", func(t *testing.T) {
-		managementinterfaceSpec := NewManagementinterfaceSpec()
+		managementinterfaceSpec := newManagementinterfaceSpec()
 
 		// Mapping of managementEndpoint
 		managementEndpoint, err := newEndPoint(Management, func(w http.ResponseWriter, r *http.Request) {})
@@ -47,7 +47,7 @@ func TestMapEndpoint(t *testing.T) {
 
 func TestCreateManagementJSON(t *testing.T) {
 	t.Run("Should create map endpoints properly", func(t *testing.T) {
-		managementinterfaceSpec := NewManagementinterfaceSpec()
+		managementinterfaceSpec := newManagementinterfaceSpec()
 		managementEndpoint, _ := newEndPoint(Management, func(w http.ResponseWriter, r *http.Request) {})
 		managementinterfaceSpec.mapEndpoint(*managementEndpoint)
 		healthEndpoint, _ := newEndPoint(Health, func(w http.ResponseWriter, r *http.Request) {})

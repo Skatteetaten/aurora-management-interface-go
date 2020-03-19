@@ -5,21 +5,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// ManagementinterfaceSpec holds information on all mapped endpoints
-type ManagementinterfaceSpec struct {
+// managementinterfaceSpec holds information on all mapped endpoints
+type managementinterfaceSpec struct {
 	managementEndpoint endpoint
 	endpoints          map[EndPointType]endpoint
 }
 
-// NewManagementinterfaceSpec creates a new ManagementinterfaceSpec with a default management endpoint
-func NewManagementinterfaceSpec() *ManagementinterfaceSpec {
-	mispec := &ManagementinterfaceSpec{
+// newManagementinterfaceSpec creates a new managementinterfaceSpec with a default management endpoint
+func newManagementinterfaceSpec() *managementinterfaceSpec {
+	mispec := &managementinterfaceSpec{
 		endpoints: make(map[EndPointType]endpoint),
 	}
 	return mispec
 }
 
-func (mispec *ManagementinterfaceSpec) mapEndpoint(endpoint endpoint) {
+func (mispec *managementinterfaceSpec) mapEndpoint(endpoint endpoint) {
 	if endpoint.endpointid == Management {
 		mispec.managementEndpoint = endpoint
 	} else {
@@ -27,7 +27,7 @@ func (mispec *ManagementinterfaceSpec) mapEndpoint(endpoint endpoint) {
 	}
 }
 
-func (mispec *ManagementinterfaceSpec) createManagementJSON(host string) ([]byte, error) {
+func (mispec *managementinterfaceSpec) createManagementJSON(host string) ([]byte, error) {
 	managementLinks := getLinkMapStructureForEndpoints(mispec.endpoints, host)
 	managementLinksJSON, err := json.Marshal(managementLinks)
 	if err != nil {

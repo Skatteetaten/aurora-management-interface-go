@@ -16,7 +16,7 @@ const DefaultPort = "8081"
 type RoutingHandler struct {
 	port           string
 	managementMux  *http.ServeMux
-	managementSpec *ManagementinterfaceSpec
+	managementSpec *managementinterfaceSpec
 }
 
 // CreateRoutingHandler creates a router to handle the management interface requests on default port (8081)
@@ -26,7 +26,7 @@ func CreateRoutingHandler() *RoutingHandler {
 
 // CreateRoutingHandlerForPort creates a router to handle the management interface requests on a specific port
 func CreateRoutingHandlerForPort(port string) *RoutingHandler {
-	managementSpec := NewManagementinterfaceSpec()
+	managementSpec := newManagementinterfaceSpec()
 	managementMux := http.NewServeMux()
 
 	mrh := RoutingHandler{
