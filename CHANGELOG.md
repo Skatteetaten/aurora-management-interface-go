@@ -1,3 +1,7 @@
+# 0.1.5
+
+Cleaning up interface to make it easier to use correctly
+
 # 0.1.4
 
 Improved documentation 
